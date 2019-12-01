@@ -1,19 +1,17 @@
-use crate::utility::input_from_file;
 use anyhow::Error;
 
 fn get_fuel_for_mass(mass: f64) -> f64 {
     (mass / 3.).floor() - 2.
 }
 
-fn get_fuel_for_mass_and_fuel(mass: f64) -> f64 {
-    let mut remaining_mass = mass;
+/// iterative version
+fn get_fuel_for_mass_and_fuel_i(mass: f64) -> f64 {
+    let mut new_mass = mass;
     let mut fuel = 0.;
-    let mut mass_fuel;
-    while remaining_mass > 0. {
-        mass_fuel = get_fuel_for_mass(remaining_mass);
-        if mass_fuel > 0. {
-            fuel += mass_fuel;
-            remaining_mass = mass_fuel;
+    while new_mass > 0. {
+        new_mass = get_fuel_for_mass(new_mass);
+        if new_mass > 0. {
+            fuel += new_mass;
         } else {
             break;
         }
@@ -21,26 +19,30 @@ fn get_fuel_for_mass_and_fuel(mass: f64) -> f64 {
     fuel
 }
 
-fn get_fuel_for_spacecraft_1(masses: &[f64]) -> f64 {
-    masses.iter().map(|mass| get_fuel_for_mass(*mass)).sum()
+/// recursive version
+fn get_fuel_for_mass_and_fuel_r(mass: f64) -> f64 {
+    let new_mass = get_fuel_for_mass(mass);
+    if new_mass > 0. {
+        new_mass + get_fuel_for_mass_and_fuel_r(new_mass)
+    } else {
+        0.
+    }
 }
 
-fn get_fuel_for_spacecraft_2(masses: &[f64]) -> f64 {
-    masses.iter().map(|mass| get_fuel_for_mass_and_fuel(*mass)).sum()
-}
-
-pub fn solve_day_1_1() -> Result<f64, Error> {
-    let masses = input_from_file("data/day_1_1.input")?
+pub fn solve_day_1_1(input: &str) -> Result<f64, Error> {
+    let masses: Vec<_> = input
         .split('\n')
-        .map(|line| line.parse::<f64>()).collect::<Result<Vec<_>, _>>()?;
-    Ok(get_fuel_for_spacecraft_1(&masses))
+        .map(|line| line.parse::<f64>())
+        .collect::<Result<_, _>>()?;
+    Ok(masses.into_iter().map(get_fuel_for_mass).sum())
 }
 
-pub fn solve_day_1_2() -> Result<f64, Error> {
-    let masses = input_from_file("data/day_1_2.input")?
+pub fn solve_day_1_2(input: &str) -> Result<f64, Error> {
+    let masses: Vec<_> = input
         .split('\n')
-        .map(|line| line.parse::<f64>()).collect::<Result<Vec<_>, _>>()?;
-    Ok(get_fuel_for_spacecraft_2(&masses))
+        .map(|line| line.parse::<f64>())
+        .collect::<Result<_, _>>()?;
+    Ok(masses.into_iter().map(get_fuel_for_mass_and_fuel_r).sum())
 }
 
 #[cfg(test)]
@@ -57,10 +59,18 @@ mod tests {
     }
 
     #[test]
-    fn test_2() -> Result<(), Error> {
-        assert_eq!(2., get_fuel_for_mass_and_fuel(14.));
-        assert_eq!(966., get_fuel_for_mass_and_fuel(1969.));
-        assert_eq!(50346., get_fuel_for_mass_and_fuel(100756.));
+    fn test_2_i() -> Result<(), Error> {
+        assert_eq!(2., get_fuel_for_mass_and_fuel_i(14.));
+        assert_eq!(966., get_fuel_for_mass_and_fuel_i(1969.));
+        assert_eq!(50346., get_fuel_for_mass_and_fuel_i(100756.));
+        Ok(())
+    }
+
+    #[test]
+    fn test_2_r() -> Result<(), Error> {
+        assert_eq!(2., get_fuel_for_mass_and_fuel_r(14.));
+        assert_eq!(966., get_fuel_for_mass_and_fuel_r(1969.));
+        assert_eq!(50346., get_fuel_for_mass_and_fuel_r(100756.));
         Ok(())
     }
 }

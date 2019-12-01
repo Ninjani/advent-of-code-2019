@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::Read;
+
 use anyhow::Result;
 
 /// Read problem input from file
