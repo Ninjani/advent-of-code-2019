@@ -14,7 +14,7 @@ fn process_intcode(intcode: &mut [usize]) {
 fn find_noun_verb(intcode: &[usize], output_equals: usize) -> Option<(usize, usize)> {
     for noun in 0..=99 {
         for verb in 0..=99 {
-            let mut intcode_noun_verb: Vec<_> = intcode.to_vec();
+            let mut intcode_noun_verb = intcode.to_vec();
             intcode_noun_verb[1] = noun;
             intcode_noun_verb[2] = verb;
             process_intcode(&mut intcode_noun_verb);
