@@ -6,14 +6,14 @@ fn process_intcode(intcode: &mut [usize]) {
             99 => break,
             1 => intcode[intcode[i + 3]] = intcode[intcode[i + 1]] + intcode[intcode[i + 2]],
             2 => intcode[intcode[i + 3]] = intcode[intcode[i + 1]] * intcode[intcode[i + 2]],
-            _ => panic!("Unknown opcode"),
+            n => panic!("Unknown opcode {}", n),
         }
     }
 }
 
 fn find_noun_verb(intcode: &[usize], output_equals: usize) -> Option<(usize, usize)> {
-    for noun in 0..=99 {
-        for verb in 0..=99 {
+    for noun in 0..100 {
+        for verb in 0..100 {
             let mut intcode_noun_verb = intcode.to_vec();
             intcode_noun_verb[1] = noun;
             intcode_noun_verb[2] = verb;
