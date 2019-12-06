@@ -11,11 +11,12 @@ mod day_2;
 mod day_3;
 mod day_4;
 mod day_5;
+mod day_6;
 pub mod utility;
 
 fn main() -> Result<()> {
-    let input = utility::input_from_file("data/day_5.input")?;
-    println!("{}", day_5::solve_day_5_1(&input)?);
-    println!("{}", day_5::solve_day_5_2(&input)?);
+    let input = utility::input_from_file("data/day_6.input")?;
+    println!("{}", day_6::solve_day_6_1(&input)?);
+    println!("{}", day_6::solve_day_6_2(&input)?);
     Ok(())
 }
