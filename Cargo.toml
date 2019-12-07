@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.25"
+itertools = "0.8.2"
 num = "0.2.0"
 num-derive = "0.3.0"
 num-traits = "0.2.10"

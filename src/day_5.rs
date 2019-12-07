@@ -1,21 +1,29 @@
 use anyhow::Error;
 use num::FromPrimitive;
 
-struct IntCode {
+pub(crate) struct IntCode {
     program: Vec<isize>,
-    pointer: usize,
-    input_value: isize,
+    pub(crate) pointer: usize,
+    pub(crate) input_value: isize,
+    pub(crate) first_input_done: bool,
+    pub(crate) halted: bool,
     outputs: Vec<isize>,
 }
 
 impl IntCode {
-    fn new(program: Vec<isize>, input_value: isize) -> Self {
+    pub(crate) fn new(program: Vec<isize>, input_value: isize) -> Self {
         IntCode {
             program,
             pointer: 0,
             input_value,
+            first_input_done: false,
+            halted: false,
             outputs: Vec::new(),
         }
+    }
+
+    pub(crate) fn change_input(&mut self, new_input: isize) {
+        self.input_value = new_input;
     }
 }
 
@@ -32,7 +40,7 @@ impl Default for Mode {
 }
 
 #[derive(Debug, Copy, Clone)]
-struct Parameter {
+pub(crate) struct Parameter {
     value: isize,
     mode: Mode,
 }
@@ -73,8 +81,8 @@ impl Parameter {
     }
 }
 
-#[derive(FromPrimitive, Copy, Clone, Debug)]
-enum OpCode {
+#[derive(FromPrimitive, Copy, Clone, Debug, Eq, PartialEq)]
+pub(crate) enum OpCode {
     Add = 1,
     Multiply = 2,
     Input = 3,
@@ -98,13 +106,17 @@ impl OpCode {
 }
 
 impl IntCode {
+    pub(crate) fn get_diagnostic(&self) -> Option<isize> {
+        if !self.outputs.is_empty() {
+            Some(self.outputs[self.outputs.len() - 1])
+        } else {
+            None
+        }
+    }
+
     fn process(&mut self) -> Result<Option<isize>, Error> {
         while !self.step()? {}
-        if !self.outputs.is_empty() {
-            Ok(Some(self.outputs[self.outputs.len() - 1]))
-        } else {
-            Ok(None)
-        }
+        Ok(self.get_diagnostic())
     }
 
     fn step(&mut self) -> Result<bool, Error> {
@@ -112,18 +124,15 @@ impl IntCode {
         Ok(self.process_instruction(opcode, &parameters)?)
     }
 
-    fn make_instruction(&self) -> Result<(OpCode, Vec<Parameter>), Error> {
+    pub(crate) fn make_instruction(&self) -> Result<(OpCode, Vec<Parameter>), Error> {
         let instruction: Vec<_> = self.program[self.pointer].to_string().chars().collect();
-
         let opcode_length = if instruction.len() >= 2 { 2 } else { 1 };
-        let opcode: OpCode = FromPrimitive::from_usize(
-            instruction[instruction.len() - opcode_length..]
-                .iter()
-                .collect::<String>()
-                .parse::<usize>()?,
-        )
-            .ok_or_else(|| anyhow!("Unknown OpCode"))?;
-
+        let opcode_int = instruction[instruction.len() - opcode_length..]
+            .iter()
+            .collect::<String>()
+            .parse::<usize>()?;
+        let opcode: OpCode = FromPrimitive::from_usize(opcode_int)
+            .ok_or_else(|| anyhow!("Unknown OpCode {}", opcode_int))?;
         let mut parameters = Vec::with_capacity(opcode.num_parameters());
         for char in instruction[..instruction.len() - opcode_length]
             .iter()
@@ -144,11 +153,10 @@ impl IntCode {
                 mode: Mode::default(),
             });
         }
-
         Ok((opcode, parameters))
     }
 
-    fn process_instruction(
+    pub(crate) fn process_instruction(
         &mut self,
         opcode: OpCode,
         parameters: &[Parameter],
@@ -207,7 +215,10 @@ impl IntCode {
                 }
                 self.pointer += opcode.num_parameters() + 1;
             }
-            OpCode::Halt => return Ok(true),
+            OpCode::Halt => {
+                self.halted = true;
+                return Ok(true);
+            }
         }
         Ok(false)
     }
