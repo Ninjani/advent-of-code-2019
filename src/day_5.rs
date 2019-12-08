@@ -3,7 +3,7 @@ use num::FromPrimitive;
 
 pub(crate) struct IntCode {
     program: Vec<isize>,
-    pub(crate) pointer: usize,
+    pointer: usize,
     pub(crate) input_value: isize,
     pub(crate) first_input_done: bool,
     pub(crate) halted: bool,
