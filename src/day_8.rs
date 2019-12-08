@@ -46,7 +46,7 @@ fn plot(array: &Array2<u32>) -> String {
     (0..array.shape()[0])
         .flat_map(|i| {
             (0..array.shape()[1])
-                .map(move |j| if array[(i, j)] == 0 { ' ' } else { '▓' })
+                .map(move |j| if array[(i, j)] == 0 { ' ' } else { '█' })
                 .chain(vec!['\n'].into_iter())
         })
         .collect()
