@@ -2,6 +2,8 @@
 #[macro_use]
 extern crate anyhow;
 #[macro_use]
+extern crate ndarray;
+#[macro_use]
 extern crate num_derive;
 
 use anyhow::Result;
@@ -13,11 +15,12 @@ mod day_4;
 mod day_5;
 mod day_6;
 mod day_7;
+mod day_8;
 pub mod utility;
 
 fn main() -> Result<()> {
-    let input = utility::input_from_file("data/day_7.input")?;
-    println!("{}", day_7::solve_day_7_1(&input)?);
-    println!("{}", day_7::solve_day_7_2(&input)?);
+    let input = utility::input_from_file("data/day_8.input")?;
+    println!("{}", day_8::solve_day_8_1(&input)?);
+    println!("{}", day_8::solve_day_8_2(&input)?);
     Ok(())
 }
