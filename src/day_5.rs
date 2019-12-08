@@ -102,7 +102,7 @@ impl OpCode {
 }
 
 impl IntCode {
-    pub(crate) fn get_diagnostic(&self) -> Option<isize> {
+    pub(crate) fn get_last_output(&self) -> Option<isize> {
         if !self.outputs.is_empty() {
             Some(self.outputs[self.outputs.len() - 1])
         } else {
@@ -112,7 +112,7 @@ impl IntCode {
 
     fn process(&mut self) -> Result<Option<isize>, Error> {
         while !self.step()? {}
-        Ok(self.get_diagnostic())
+        Ok(self.get_last_output())
     }
 
     fn step(&mut self) -> Result<bool, Error> {

@@ -15,7 +15,7 @@ impl IntCode {
                 self.first_input_done = true;
             }
         }
-        Ok(self.get_diagnostic())
+        Ok(self.get_last_output())
     }
 
     fn process_till_next_output(&mut self, new_input: isize) -> Result<Option<isize>, Error> {
@@ -31,7 +31,7 @@ impl IntCode {
             }
 
             if opcode == OpCode::Output || opcode == OpCode::Halt {
-                return Ok(self.get_diagnostic());
+                return Ok(self.get_last_output());
             }
         }
     }
