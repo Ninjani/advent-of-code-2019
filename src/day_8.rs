@@ -43,13 +43,13 @@ pub fn solve_day_8_1(input: &str) -> Result<u32, Error> {
 }
 
 fn plot(array: &Array2<u32>) -> String {
-    (0..array.shape()[0]).flat_map(|i| (0..array.shape()[1]).map(move |j| {
-        if array[(i, j)] == 0 {
-            ' '
-        } else {
-            '▓'
-        }
-    }).chain(vec!['\n'].into_iter())).collect()
+    (0..array.shape()[0])
+        .flat_map(|i| {
+            (0..array.shape()[1])
+                .map(move |j| if array[(i, j)] == 0 { ' ' } else { '▓' })
+                .chain(vec!['\n'].into_iter())
+        })
+        .collect()
 }
 
 pub fn solve_day_8_2(input: &str) -> Result<String, Error> {

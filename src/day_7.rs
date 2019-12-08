@@ -55,7 +55,9 @@ pub fn get_thrust_feedback(program: &[isize], phase_sequence: &[isize]) -> Resul
         .collect();
     let mut index = 0;
     loop {
-        new_input = amplifiers[index].process_till_next_output(new_input)?.unwrap();
+        new_input = amplifiers[index]
+            .process_till_next_output(new_input)?
+            .unwrap();
         if amplifiers.iter().all(|a| a.halted) {
             return Ok(new_input);
         }
