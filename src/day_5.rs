@@ -21,10 +21,6 @@ impl IntCode {
             outputs: Vec::new(),
         }
     }
-
-    pub(crate) fn change_input(&mut self, new_input: isize) {
-        self.input_value = new_input;
-    }
 }
 
 #[derive(FromPrimitive, Copy, Clone, Debug)]
