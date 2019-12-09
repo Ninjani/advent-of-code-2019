@@ -1,5 +1,4 @@
 use anyhow::Error;
-use num::bigint::BigInt;
 use num::FromPrimitive;
 
 pub struct IntCode {
@@ -8,7 +7,7 @@ pub struct IntCode {
     pub input_value: i64,
     pub first_input_done: bool,
     pub halted: bool,
-    outputs: Vec<i64>,
+    pub outputs: Vec<i64>,
     relative_base: i64,
 }
 
@@ -93,7 +92,7 @@ impl Parameter {
                 self.value += relative_base;
                 self._set_address(value, program)
             }
-            _ => Err(anyhow!("set parameter must be in position mode")),
+            _ => Err(anyhow!("set parameter must be in position/relative mode")),
         }
     }
 }
@@ -108,7 +107,7 @@ pub enum OpCode {
     JumpIfFalse = 6,
     LessThan = 7,
     Equals = 8,
-    AdjustRelativeBase = 9,
+    RelativeBaseOffset = 9,
     Halt = 99,
 }
 
@@ -117,7 +116,7 @@ impl OpCode {
         match self {
             OpCode::Add | OpCode::Multiply | OpCode::LessThan | OpCode::Equals => 3,
             OpCode::JumpIfTrue | OpCode::JumpIfFalse => 2,
-            OpCode::Input | OpCode::Output | OpCode::AdjustRelativeBase => 1,
+            OpCode::Input | OpCode::Output | OpCode::RelativeBaseOffset => 1,
             OpCode::Halt => 0,
         }
     }
@@ -142,7 +141,10 @@ impl IntCode {
         Ok(self.process_instruction(opcode, &mut parameters)?)
     }
 
-    pub fn make_instruction(&self) -> Result<(OpCode, Vec<Parameter>), Error> {
+    pub fn make_instruction(&mut self) -> Result<(OpCode, Vec<Parameter>), Error> {
+        if self.pointer >= self.program.len() {
+            self.program.resize(self.pointer + 1, 0);
+        }
         let instruction: Vec<_> = self.program[self.pointer].to_string().chars().collect();
         let opcode_length = if instruction.len() >= 2 { 2 } else { 1 };
         let opcode_int = instruction[instruction.len() - opcode_length..]
@@ -239,7 +241,7 @@ impl IntCode {
                 }
                 self.pointer += opcode.num_parameters() + 1;
             }
-            OpCode::AdjustRelativeBase => {
+            OpCode::RelativeBaseOffset => {
                 self.relative_base += parameters[0].get(&self.program, self.relative_base)?;
                 self.pointer += opcode.num_parameters() + 1;
             }

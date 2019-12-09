@@ -16,12 +16,13 @@ mod day_5;
 mod day_6;
 mod day_7;
 mod day_8;
+mod day_9;
 pub mod intcode_compiler;
 pub mod utility;
 
 fn main() -> Result<()> {
-    let input = utility::input_from_file("data/day_8.input")?;
-    println!("{}", day_8::solve_day_8_1(&input)?);
-    println!("{}", day_8::solve_day_8_2(&input)?);
+    let input = utility::input_from_file("data/day_9.input")?;
+    println!("{}", day_9::solve_day_9_1(&input)?);
+    println!("{}", day_9::solve_day_9_2(&input)?);
     Ok(())
 }
