@@ -186,21 +186,13 @@ impl IntCode {
             OpCode::Add => {
                 let op1 = parameters[0].get(&self.program, self.relative_base)?;
                 let op2 = parameters[1].get(&self.program, self.relative_base)?;
-                parameters[2].set(
-                    op1 + op2,
-                    &mut self.program,
-                    self.relative_base,
-                )?;
+                parameters[2].set(op1 + op2, &mut self.program, self.relative_base)?;
                 self.pointer += opcode.num_parameters() + 1;
             }
             OpCode::Multiply => {
                 let op1 = parameters[0].get(&self.program, self.relative_base)?;
                 let op2 = parameters[1].get(&self.program, self.relative_base)?;
-                parameters[2].set(
-                    op1 * op2,
-                    &mut self.program,
-                    self.relative_base,
-                )?;
+                parameters[2].set(op1 * op2, &mut self.program, self.relative_base)?;
                 self.pointer += opcode.num_parameters() + 1;
             }
             OpCode::Input => {
@@ -208,7 +200,8 @@ impl IntCode {
                 self.pointer += opcode.num_parameters() + 1;
             }
             OpCode::Output => {
-                self.outputs.push(parameters[0].get(&self.program, self.relative_base)?);
+                self.outputs
+                    .push(parameters[0].get(&self.program, self.relative_base)?);
                 self.pointer += opcode.num_parameters() + 1;
             }
             OpCode::JumpIfTrue => {
@@ -226,7 +219,9 @@ impl IntCode {
                 }
             }
             OpCode::LessThan => {
-                if parameters[0].get(&self.program, self.relative_base)? < parameters[1].get(&self.program, self.relative_base)? {
+                if parameters[0].get(&self.program, self.relative_base)?
+                    < parameters[1].get(&self.program, self.relative_base)?
+                {
                     parameters[2].set(1, &mut self.program, self.relative_base)?;
                 } else {
                     parameters[2].set(0, &mut self.program, self.relative_base)?;
@@ -234,7 +229,9 @@ impl IntCode {
                 self.pointer += opcode.num_parameters() + 1;
             }
             OpCode::Equals => {
-                if parameters[0].get(&self.program, self.relative_base)? == parameters[1].get(&self.program, self.relative_base)? {
+                if parameters[0].get(&self.program, self.relative_base)?
+                    == parameters[1].get(&self.program, self.relative_base)?
+                {
                     parameters[2].set(1, &mut self.program, self.relative_base)?;
                 } else {
                     parameters[2].set(0, &mut self.program, self.relative_base)?;
