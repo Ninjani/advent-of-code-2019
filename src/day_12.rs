@@ -11,6 +11,13 @@ struct Moon {
     velocity: Vec3D,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct Moons {
+    moons: Vec<Moon>,
+    length: usize,
+    initial_positions: Vec<Vec3D>,
+}
+
 impl Moon {
     fn new(position: Vec3D) -> Moon {
         Moon {
@@ -19,18 +26,16 @@ impl Moon {
         }
     }
 
-    fn update_position(&mut self) {
-        for i in 0..3 {
-            self.position[i] += self.velocity[i];
-        }
+    fn update_position_i(&mut self, i: usize) {
+        self.position[i] += self.velocity[i];
     }
 
     fn get_potential_energy(&self) -> i64 {
-        (0..3).map(|i| self.position[i].abs()).sum()
+        self.position.iter().map(|p| p.abs()).sum()
     }
 
     fn get_kinetic_energy(&self) -> i64 {
-        (0..3).map(|i| self.velocity[i].abs()).sum()
+        self.velocity.iter().map(|p| p.abs()).sum()
     }
 
     fn get_energy(&self) -> i64 {
@@ -38,84 +43,104 @@ impl Moon {
     }
 }
 
-fn parse_input(input: &str) -> Result<Vec<Moon>, Error> {
-    fn get_value(part: &str) -> Result<i64, Error> {
-        Ok(part.split('=').last().unwrap().parse::<i64>()?)
+impl Moons {
+    fn new(input: &str) -> Result<Self, Error> {
+        fn get_value(part: &str) -> Result<i64, Error> {
+            Ok(part.split('=').last().unwrap().parse::<i64>()?)
+        }
+        let mut moons = Vec::new();
+        for line in input.split('\n') {
+            let parts: Vec<_> = line.split(", ").collect();
+            moons.push(Moon::new([
+                get_value(parts[0])?,
+                get_value(parts[1])?,
+                get_value(&parts[2][..parts[2].len() - 1])?,
+            ]));
+        }
+        let length = moons.len();
+        let initial_positions = moons.iter().map(|m| m.position).collect();
+        Ok(Moons {
+            moons,
+            length,
+            initial_positions,
+        })
     }
-    let mut moons = Vec::new();
-    for line in input.split('\n') {
-        let parts: Vec<_> = line.split(", ").collect();
-        moons.push(Moon::new([
-            get_value(parts[0])?,
-            get_value(parts[1])?,
-            get_value(&parts[2][..parts[2].len() - 1])?,
-        ]));
+
+    fn get_total_energy(&self) -> i64 {
+        self.moons.iter().map(|moon| moon.get_energy()).sum()
     }
-    Ok(moons)
-}
 
-fn get_total_energy(moons: &[Moon]) -> i64 {
-    moons.iter().map(|moon| moon.get_energy()).sum::<i64>()
-}
-
-fn change_velocity(moons: &mut [Moon], index_1: usize, index_2: usize) {
-    for i in 0..3 {
-        match moons[index_1].position[i].cmp(&moons[index_2].position[i]) {
+    fn change_velocity_i(&mut self, index_1: usize, index_2: usize, i: usize) {
+        match self.moons[index_1].position[i].cmp(&self.moons[index_2].position[i]) {
             Ordering::Greater => {
-                moons[index_1].velocity[i] -= 1;
-                moons[index_2].velocity[i] += 1;
+                self.moons[index_1].velocity[i] -= 1;
+                self.moons[index_2].velocity[i] += 1;
             }
             Ordering::Less => {
-                moons[index_1].velocity[i] += 1;
-                moons[index_2].velocity[i] -= 1;
+                self.moons[index_1].velocity[i] += 1;
+                self.moons[index_2].velocity[i] -= 1;
             }
-            _ => ()
+            _ => (),
         }
     }
-}
 
-fn simulate_moons(moons: &mut [Moon], num_steps: usize) {
-    for _ in 0..num_steps {
-        for index_1 in 0..moons.len() {
-            for index_2 in index_1 + 1..moons.len() {
-                change_velocity(moons, index_1, index_2);
+    fn time_step_i(&mut self, i: usize) {
+        for index_1 in 0..self.length {
+            for index_2 in index_1 + 1..self.length {
+                self.change_velocity_i(index_1, index_2, i);
             }
-            moons[index_1].update_position();
+            self.moons[index_1].update_position_i(i);
         }
     }
-}
 
-fn find_simulation_period(moons: &mut [Moon]) -> Option<usize> {
-    let mut periods = [None, None, None];
-    let initial_positions: Vec<_> = moons.iter().map(|m| m.position).collect();
-    let mut step = 0;
-    while periods.iter().any(|p| p.is_none()) {
-        simulate_moons(moons, 1);
-        step += 1;
-        for (i, p) in periods.iter_mut().enumerate().filter(|(_, p)| p.is_none()) {
-            let back_to_first = moons.iter().enumerate().all(|(m, moon)| {
-                moon.position[i] == initial_positions[m][i] && moon.velocity[i] == 0
+    fn time_step(&mut self) {
+        for index_1 in 0..self.length {
+            for index_2 in index_1 + 1..self.length {
+                for i in 0..3 {
+                    self.change_velocity_i(index_1, index_2, i);
+                }
+            }
+            for i in 0..3 {
+                self.moons[index_1].update_position_i(i);
+            }
+        }
+    }
+
+    fn find_period_i(&mut self, i: usize) -> usize {
+        let mut step = 0;
+        loop {
+            self.time_step_i(i);
+            step += 1;
+            let back_to_first = self.moons.iter().enumerate().all(|(m, moon)| {
+                moon.position[i] == self.initial_positions[m][i] && moon.velocity[i] == 0
             });
             if back_to_first {
-                *p = Some(step);
+                return step;
             }
         }
     }
-    match periods {
-        [Some(x), Some(y), Some(z)] => Some(lcm(x, lcm(y, z))),
-        _ => None,
+
+    fn find_period(&mut self) -> usize {
+        let (x, y, z) = (
+            self.find_period_i(0),
+            self.find_period_i(1),
+            self.find_period_i(2),
+        );
+        lcm(x, lcm(y, z))
     }
 }
 
 pub fn solve_day_12_1(input: &str) -> Result<i64, Error> {
-    let mut moons = parse_input(input)?;
-    simulate_moons(&mut moons, 1000);
-    Ok(get_total_energy(&moons))
+    let mut moons = Moons::new(input)?;
+    for _ in 0..1000 {
+        moons.time_step();
+    }
+    Ok(moons.get_total_energy())
 }
 
 pub fn solve_day_12_2(input: &str) -> Result<usize, Error> {
-    let mut moons = parse_input(input)?;
-    Ok(find_simulation_period(&mut moons).unwrap())
+    let mut moons = Moons::new(input)?;
+    Ok(moons.find_period())
 }
 
 #[cfg(test)]
@@ -124,38 +149,42 @@ mod tests {
 
     #[test]
     fn test_1() -> Result<(), Error> {
-        let mut moons = parse_input(
-            "<x=-1, y=0, z=2>\n<x=2, y=-10, z=-7>\n<x=4, y=-8, z=8>\n<x=3, y=5, z=-1>",
-        )?;
+        let mut moons =
+            Moons::new("<x=-1, y=0, z=2>\n<x=2, y=-10, z=-7>\n<x=4, y=-8, z=8>\n<x=3, y=5, z=-1>")?;
         // 5 steps
-        simulate_moons(&mut moons, 5);
-        assert_eq!(moons[0].position, [-1, -9, 2]);
-        assert_eq!(moons[0].velocity, [-3, -1, 2]);
+        for _ in 0..5 {
+            moons.time_step();
+        }
+        assert_eq!(moons.moons[0].position, [-1, -9, 2]);
+        assert_eq!(moons.moons[0].velocity, [-3, -1, 2]);
         // 10 steps
-        simulate_moons(&mut moons, 5);
-        assert_eq!(moons[0].position, [2, 1, -3]);
-        assert_eq!(moons[0].velocity, [-3, -2, 1]);
-        assert_eq!(179, get_total_energy(&moons));
+        for _ in 0..5 {
+            moons.time_step();
+        }
+        assert_eq!(moons.moons[0].position, [2, 1, -3]);
+        assert_eq!(moons.moons[0].velocity, [-3, -2, 1]);
+        assert_eq!(179, moons.get_total_energy());
 
-        let mut moons = parse_input(
+        let mut moons = Moons::new(
             "<x=-8, y=-10, z=0>\n<x=5, y=5, z=10>\n<x=2, y=-7, z=3>\n<x=9, y=-8, z=-3>",
         )?;
-        simulate_moons(&mut moons, 100);
-        assert_eq!(1940, get_total_energy(&moons));
+        for _ in 0..100 {
+            moons.time_step();
+        }
+        assert_eq!(1940, moons.get_total_energy());
         Ok(())
     }
 
     #[test]
     fn test_2() -> Result<(), Error> {
-        let mut moons = parse_input(
-            "<x=-1, y=0, z=2>\n<x=2, y=-10, z=-7>\n<x=4, y=-8, z=8>\n<x=3, y=5, z=-1>",
-        )?;
-        assert_eq!(2772, find_simulation_period(&mut moons).unwrap());
+        let mut moons =
+            Moons::new("<x=-1, y=0, z=2>\n<x=2, y=-10, z=-7>\n<x=4, y=-8, z=8>\n<x=3, y=5, z=-1>")?;
+        assert_eq!(2772, moons.find_period());
 
-        let mut moons = parse_input(
+        let mut moons = Moons::new(
             "<x=-8, y=-10, z=0>\n<x=5, y=5, z=10>\n<x=2, y=-7, z=3>\n<x=9, y=-8, z=-3>",
         )?;
-        assert_eq!(4686774924, find_simulation_period(&mut moons).unwrap());
+        assert_eq!(4686774924, moons.find_period());
         Ok(())
     }
 }
