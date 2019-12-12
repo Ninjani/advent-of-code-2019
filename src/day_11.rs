@@ -36,12 +36,12 @@ impl Default for Color {
 }
 
 impl Direction {
-    fn new_location(self, location: &Point) -> Point {
+    fn step(self, location: &mut Point) {
         match self {
-            Direction::Up => (location.0, location.1 + 1),
-            Direction::Right => (location.0 + 1, location.1),
-            Direction::Left => (location.0 - 1, location.1),
-            Direction::Down => (location.0, location.1 - 1),
+            Direction::Up => location.1 += 1,
+            Direction::Right => location.0 += 1,
+            Direction::Left => location.0 -= 1,
+            Direction::Down => location.1 -= 1,
         }
     }
 
@@ -107,7 +107,7 @@ impl PaintingRobot {
                 self.set_color_at(self.location, color);
                 let turn = FromPrimitive::from_i64(self.program.outputs[1]).unwrap();
                 self.direction = self.direction.turn(turn);
-                self.location = self.direction.new_location(&self.location);
+                self.direction.step(&mut self.location);
                 self.program.outputs = Vec::new();
                 break;
             }
