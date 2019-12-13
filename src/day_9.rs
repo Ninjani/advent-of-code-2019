@@ -40,7 +40,15 @@ mod tests {
             .collect::<Result<Vec<_>, _>>()?;
         let mut intcode = IntCode::new(program, 1);
         intcode.process()?;
-        assert_eq!(intcode.get_last_output().unwrap().to_string().chars().count(), 16);
+        assert_eq!(
+            intcode
+                .get_last_output()
+                .unwrap()
+                .to_string()
+                .chars()
+                .count(),
+            16
+        );
 
         let program = "104,1125899906842624,99"
             .split(',')

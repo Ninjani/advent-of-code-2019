@@ -44,7 +44,6 @@ pub fn solve_day_8_1(input: &str) -> Result<u32, Error> {
     Ok(ones * twos)
 }
 
-
 pub fn solve_day_8_2(input: &str) -> Result<String, Error> {
     let image = get_image(input)?;
     let mut visible = Array2::zeros((HEIGHT, WIDTH));

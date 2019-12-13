@@ -203,12 +203,12 @@ pub fn solve_day_13_1(input: &str) -> Result<usize, Error> {
 fn play(arcade: &mut ArcadeCabinet, read: bool, write: bool) -> Result<i64, Error> {
     if read {
         let joysticks = input_from_file("data/day_13.output")?
-            .split(",")
+            .split(',')
             .map(|i| i.parse::<i64>())
             .collect::<Result<Vec<_>, _>>()?;
         arcade.joysticks = joysticks
             .into_iter()
-            .map(|i| FromPrimitive::from_i64(i).unwrap_or(Joystick::default()))
+            .map(|i| FromPrimitive::from_i64(i).unwrap_or_default())
             .collect();
     }
     arcade.run()?;
