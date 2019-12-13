@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 
 use anyhow::Result;
 use ndarray::Array2;
@@ -10,6 +10,12 @@ pub fn input_from_file(filename: &str) -> Result<String> {
     let mut contents = String::new();
     f.read_to_string(&mut contents)?;
     Ok(contents.trim().to_owned())
+}
+
+pub fn write_to_file(filename: &str, contents: &str) -> Result<()> {
+    let mut f = File::create(filename)?;
+    f.write_all(contents.as_bytes())?;
+    Ok(())
 }
 
 pub fn plot(array: &Array2<u32>) -> String {
